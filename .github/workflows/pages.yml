@@ -4,7 +4,10 @@
 # - gh-pages の中身（site.yml が毎回 1 コミットで置き換える）をそのまま Pages に出す。
 # - ブランチから出す方式（legacy）は公開の待ちが 10 分で切れ、zip と setup.exe（約 100MB）を載せると
 #   間に合わなかった（2026-11-09、v0.2.0）。ここでは待ちを 30 分にする。
-# - site.yml が gh-pages に push した後、repository_dispatch（deploy-pages）で呼ぶ。手で回すこともできる。
+# - site.yml が gh-pages に push した後、repository_dispatch（deploy-pages）で呼ぶ。
+# - 公開はコミットごとに 1 回分で、同じコミットからの 2 回目は「成功」と返るだけで中身が変わらない（2026-11-09、v0.2.1）。
+#   そのため site.yml が公開のたびに main の .pages-deploy を更新してコミットを進める。これを手で回しても、main が同じならページは変わらない。
+#   中身を出し直す時は、ソースのリポジトリの Actions「Download page」を回す。最後に、実際に配られている版も確かめる。
 name: Pages
 
 on:
@@ -41,3 +44,21 @@ jobs:
         uses: actions/deploy-pages@v4
         with:
           timeout: 1800000
+      - name: 公開された版を確かめる
+        run: |
+          WANT="$(jq -r .version update/latest.json)"
+          URL="${PAGE_URL%/}/update/latest.json"
+          # Pages の配信のキャッシュは最長 10 分。問い合わせの文字列で避けつつ、15 分まで待つ
+          for i in $(seq 1 60); do
+            GOT="$(curl -fsS -m 20 "${URL}?check=${GITHUB_RUN_ID}-${i}" | jq -r .version || true)"
+            if [ "$GOT" = "$WANT" ]; then
+              echo "公開された版: v${GOT}"
+              exit 0
+            fi
+            echo "配られている版は v${GOT:-?}（待っているのは v${WANT}。${i} 回目）"
+            sleep 15
+          done
+          echo "::error::公開は成功と出ましたが、ページの版が v${WANT} になりません（同じコミットからの公開なら、ソースのリポジトリの「Download page」を回してください）"
+          exit 1
+        env:
+          PAGE_URL: ${{ steps.deploy.outputs.page_url }}

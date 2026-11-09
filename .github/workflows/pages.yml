@@ -1,0 +1,43 @@
+# 公開用のリポジトリ（flip-crest-releases）の main に置く、ダウンロードページの公開（GitHub Pages）。
+# 元はソースのリポジトリの .github/release-repo/pages.yml。ここを直したら公開用のリポジトリの
+# .github/workflows/pages.yml にも同じものを入れる（docs/release.md の「ダウンロードページ」）。
+# - gh-pages の中身（site.yml が毎回 1 コミットで置き換える）をそのまま Pages に出す。
+# - ブランチから出す方式（legacy）は公開の待ちが 10 分で切れ、zip と setup.exe（約 100MB）を載せると
+#   間に合わなかった（2026-11-09、v0.2.0）。ここでは待ちを 30 分にする。
+# - site.yml が gh-pages に push した後、repository_dispatch（deploy-pages）で呼ぶ。手で回すこともできる。
+name: Pages
+
+on:
+  repository_dispatch:
+    types: [deploy-pages]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 公開は 1 つずつ。途中のものは止めない（止めると半端に終わる）
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: ダウンロードページを公開する
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deploy
+        uses: actions/deploy-pages@v4
+        with:
+          timeout: 1800000

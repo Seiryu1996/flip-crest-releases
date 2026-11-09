@@ -3,7 +3,8 @@
 # .github/workflows/pages.yml にも同じものを入れる（docs/release.md の「ダウンロードページ」）。
 # - gh-pages の中身（site.yml が毎回 1 コミットで置き換える）をそのまま Pages に出す。
 # - ブランチから出す方式（legacy）は公開の待ちが 10 分で切れ、zip と setup.exe（約 100MB）を載せると
-#   間に合わなかった（2026-11-09、v0.2.0）。ここでは待ちを 30 分にする。
+#   間に合わなかった（2026-11-09、v0.2.0）。
+# - actions/deploy-pages の待ちは最長 10 分で、timeout を大きくしても延びない。切れるとこの実行は赤になる（配っているページは前のまま）。
 # - site.yml が gh-pages に push した後、repository_dispatch（deploy-pages）で呼ぶ。
 # - 公開はコミットごとに 1 回分で、同じコミットからの 2 回目は「成功」と返るだけで中身が変わらない（2026-11-09、v0.2.1）。
 #   そのため site.yml が公開のたびに main の .pages-deploy を更新してコミットを進める。これを手で回しても、main が同じならページは変わらない。
@@ -42,8 +43,6 @@ jobs:
           path: .
       - id: deploy
         uses: actions/deploy-pages@v4
-        with:
-          timeout: 1800000
       - name: 公開された版を確かめる
         run: |
           WANT="$(jq -r .version update/latest.json)"

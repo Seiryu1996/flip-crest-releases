@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<!--
+  Flip Crest の Web 版のページ（WebGL テンプレート。docs/specs/web.md）。
+  - 画面いっぱいに出す（スマホでも同じ）。Unity のロゴの帯は出さない。
+  - autoSyncPersistentDataPath: セーブ（persistentDataPath のファイル）を書いたら IndexedDB に書き戻す。
+    これが無いと Unity 6 は書き戻さず、ページを開き直すとセーブが消える。
+  - 読み込み中は進み具合を出し、失敗は alert ではなくページに出す。
+  - スマホ: ホーム画面に追加できる（manifest.webmanifest・アイコン）。長押しのメニュー・文字選び・
+    引っ張って更新・ダブルタップの拡大は止める（ゲームの長押し・スクロールと取り違えない）。
+    音とページの見張りは Plugins/WebGL/FlipCrestPage.jslib。
+-->
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0b1024">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="フリップ・クレスト">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-180.png">
+    <title>Flip Crest</title>
+    <style>
+      html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #0b1024;
+                   overscroll-behavior: none; -webkit-user-select: none; user-select: none;
+                   -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
+      body { color: #e8ecff; font-family: "Hiragino Sans", "Yu Gothic UI", "Noto Sans JP", sans-serif; }
+      #unity-canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; background: #0b1024; outline: none; touch-action: none; }
+      #loading { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+                 background: radial-gradient(ellipse at 50% 40%, #1d2a5c 0%, #0b1024 70%); transition: opacity .4s; }
+      #loading.done { opacity: 0; pointer-events: none; }
+      #loading .title { font-size: clamp(28px, 6vw, 56px); font-weight: 800; letter-spacing: .08em; color: #ffd76a; text-shadow: 0 0 24px rgba(255, 200, 80, .45); }
+      #loading .sub { font-size: 14px; letter-spacing: .3em; color: #9fb0ff; }
+      #bar { width: min(70vw, 420px); height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .12); overflow: hidden; }
+      #bar > div { width: 0; height: 100%; background: linear-gradient(90deg, #6aa8ff, #ffd76a); transition: width .2s; }
+      #status { font-size: 13px; color: #9fb0ff; min-height: 1.5em; text-align: center; padding: 0 16px; }
+      #status.error { color: #ff8a8a; }
+    </style>
+  </head>
+  <body>
+    <canvas id="unity-canvas" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+    <div id="loading">
+      <div class="sub">FLIP CREST</div>
+      <div class="title">フリップ・クレスト</div>
+      <div id="bar"><div></div></div>
+      <div id="status">読み込んでいます…</div>
+    </div>
+    <script src="Build/6a91a2f358c5c985aed637e2383dfb95.loader.js"></script>
+    <script>
+      var loading = document.getElementById("loading");
+      var bar = document.querySelector("#bar > div");
+      var status = document.getElementById("status");
+      createUnityInstance(document.getElementById("unity-canvas"), {
+        arguments: [],
+        dataUrl: "Build/c6bc1b6e41b82bb76ee98d5133be31a3.data.unityweb",
+        frameworkUrl: "Build/b07cb62f9a6c9745a0840bef289d9179.framework.js.unityweb",
+        codeUrl: "Build/c1f2c8ba64b25ab69e997966915b35c0.wasm.unityweb",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "FlipCrestDev",
+        productName: "Flip Crest",
+        productVersion: "0.3.7",
+        // セーブを書いたら IndexedDB に書き戻す（無いと開き直すとセーブが消える）
+        autoSyncPersistentDataPath: true,
+        // 高精細の画面で重くなりすぎないよう、描く細かさは 2 倍まで
+        devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+      }, function (progress) {
+        bar.style.width = Math.round(progress * 100) + "%";
+        if (progress >= 0.9) status.textContent = "準備しています…";
+      }).then(function () {
+        loading.classList.add("done");
+      }).catch(function (message) {
+        status.textContent = "読み込めませんでした。ページを開き直してください（" + message + "）";
+        status.className = "error";
+      });
+    </script>
+  </body>
+</html>

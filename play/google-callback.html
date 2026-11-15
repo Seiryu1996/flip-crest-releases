@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<!--
+  Google でのログインから戻るページ（#58。docs/specs/account.md の Google アカウント）。
+  Google がここに ?code=…&state=…（やめた時は ?error=…）を付けて戻す。ゲームが出る前に置いた
+  localStorage の fc-google-pending と state が合えば、結果を fc-google-result に置いて "./"（ゲーム）に戻す。
+  code を履歴に残さないよう location.replace を使う。外のファイルは読まない。
+  合わない時（別のタブ・時間切れ・別の場所から開いた）は、案内とゲームへのリンクを出す。
+-->
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <meta name="theme-color" content="#0b1024">
+    <title>フリップ・クレスト</title>
+    <style>
+      html, body { margin: 0; padding: 0; background: #0b1024; color: #e8ecff;
+                   font-family: "Hiragino Sans", "Yu Gothic UI", "Noto Sans JP", sans-serif; }
+      main { max-width: 480px; margin: 0 auto; padding: 72px 16px; text-align: center; }
+      h1 { font-size: 22px; color: #ffd76a; letter-spacing: .08em; }
+      p { font-size: 16px; line-height: 1.7; }
+      a { display: inline-block; margin-top: 16px; padding: 14px 28px; border-radius: 12px; background: #2b3a78;
+          color: #e8ecff; text-decoration: none; font-weight: 700; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>フリップ・クレスト</h1>
+      <p id="msg">ゲームに戻っています…</p>
+      <a id="back" href="./" hidden>ゲームに戻る</a>
+    </main>
+    <script>
+      (function () {
+        function fail(text) {
+          document.getElementById("msg").textContent = text;
+          document.getElementById("back").hidden = false;
+        }
+        try {
+          var q = new URLSearchParams(window.location.search);
+          var code = q.get("code") || "";
+          var state = q.get("state") || "";
+          var error = q.get("error") || "";
+          var pending = JSON.parse(localStorage.getItem("fc-google-pending") || "null");
+          var fresh = pending && typeof pending.ts === "number" && Date.now() - pending.ts < 600000;
+          if (!fresh || !state || pending.state !== state || (!code && !error)) {
+            fail("ログインの確認が見つかりませんでした。時間が経ったか、別の画面から開いた可能性があります。ゲームに戻って、もう一度お試しください。");
+            return;
+          }
+          localStorage.setItem("fc-google-result", JSON.stringify({ code: code, state: state, error: error.substring(0, 64) }));
+          window.location.replace("./");
+        } catch (e) {
+          fail("ログインの確認を受け取れませんでした。ゲームに戻って、もう一度お試しください。");
+        }
+      })();
+    </script>
+  </body>
+</html>

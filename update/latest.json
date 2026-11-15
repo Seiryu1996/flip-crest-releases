@@ -1,0 +1,25 @@
+{
+  "version": "0.3.9",
+  "date": "2026-11-15",
+  "notes": "【修正】\n\n・オンライン対戦で相手を探している最中に「観戦」を開くと、組まれた対戦を打てずに負けることがあったのを直しました。観戦に移る時は相手探しを止めます。\n・観戦の途中で見られなくなった時（ログインが切れた・観戦が満員など）に、待ち続けずに理由を出して止めるようにしました。観戦の一覧で読み込みに失敗した時の案内が、対戦の行に重なっていたのも直しました。\n・Web 版で「共有」「コピー」「ホーム画面に追加」を素早くタップすると、動かないことがあったのを直しました。\n・タイトル（横向き）で、キャンペーンの札が「リプレイ」「詰めクレスト」のボタンを隠していたのを直しました。\n・英語の表示で、対戦ログのデッキの名前と、はじめの名前が日本語のまま出ていたのを直しました。\n\n【変更】\n\n・オンラインの「最近の相手」の一覧は、開いた時と「更新」を押した時に読み込むようにしました（通信を減らしました）。",
+  "files": [
+    {
+      "platform": "mac",
+      "urls": [
+        "https://seiryu1996.github.io/flip-crest-releases/download/FlipCrest-v0.3.9-mac.zip",
+        "https://github.com/Seiryu1996/flip-crest-releases/releases/download/v0.3.9/FlipCrest-v0.3.9-mac.zip"
+      ],
+      "sha256": "b6257327771392ef4a162ffe74e72cbc9f6a0f5baf1620435a2e1eb37f5f9fb5",
+      "size": 62179889
+    },
+    {
+      "platform": "win",
+      "urls": [
+        "https://seiryu1996.github.io/flip-crest-releases/download/FlipCrest-v0.3.9-win.zip",
+        "https://github.com/Seiryu1996/flip-crest-releases/releases/download/v0.3.9/FlipCrest-v0.3.9-win.zip"
+      ],
+      "sha256": "105ae5af7b5be55693a49c57cf95b819546b7deec45344d3ad362ec70d0beefd",
+      "size": 71630630
+    }
+  ]
+}
